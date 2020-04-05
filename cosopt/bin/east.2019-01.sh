@@ -2,8 +2,8 @@
 SIDE=East
 
 # SET THESE ACCORDING TO YOUR FILE LOCATIONS
-BASE_DIR=<Path to Base Directory of Analysis>
-BIN_DIR=<Path to COSOPT-Assembly-Line/bin/>
+BASE_DIR=    # Path to Base Directory of Analysis
+BIN_DIR=     # Path to COSOPT-Assembly-Line/bin/
 
 # CHANGE THESE IF NECESSARY
 OUT_DIR=$BASE_DIR/output-files/$SIDE-session
