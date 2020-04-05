@@ -1,3 +1,8 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
 title: "Sunflower Rhythms 2020 Post-COSOPT Analysis"
 output:
   pdf_document: default
@@ -201,6 +206,8 @@ md5sum(list.files('cosopt/output-files', pattern='.tsv', full.names=TRUE))
 
 
 ```{r}
+if (!dir.exists('cosopt-processed')) dir.create('cosopt-processed')
+
 cosopt.east <- read.table('cosopt/output-files/HA2015_HanXRQr1.0-East.cosopt-results.tsv', h=T)
 cosopt.merged <- read.table('cosopt/output-files/HA2015_HanXRQr1.0-Merged.cosopt-results.tsv', h=T)
 cosopt.west <- read.table('cosopt/output-files/HA2015_HanXRQr1.0-West.cosopt-results.tsv', h=T)
@@ -237,7 +244,7 @@ cosopt$amp.diff <- cosopt$RelAmp.W - cosopt$RelAmp.E
 
 cosopt$exp.diff.log2 <- log(cosopt$MeanExpLev.W / cosopt$MeanExpLev.E, 2)
 
-cosopt.processed.file <- 'cosopt-processed.txt'
+cosopt.processed.file <- 'cosopt-processed/cosopt-processed.txt'
 write.table(cosopt, cosopt.processed.file, sep = "\t", quote = FALSE, col.names=NA)
 
 
@@ -513,7 +520,7 @@ expdiff <- subset(cosopt, GeneID %in% rhythmic.both & abs(exp.diff.log2) > 0.6 &
 plot.timecourse(expdiff$GeneID, lights.off = 13.25)
 ggsave(paste0('plots/exp-diff.png'), w=6, h=25)
 ggsave(paste0('plots/exp-diff.pdf'), w=6, h=25)
-write.table(expdiff, 'cosopt-processed.exp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
+write.table(expdiff, 'cosopt-processed/cosopt-processed.exp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 exp <- rownames(expdiff)
 exp.e <- subset(cosopt, GeneID %in% exp & exp.diff.log2 < 0)$GeneID
@@ -528,7 +535,7 @@ amp.w <- subset(cosopt, GeneID %in% amp & amp.diff > 0)$GeneID
 plot.timecourse(amp, lights.off = 13.25)
 ggsave(paste0('plots/amp-diff.png'), w=6, h=23)
 ggsave(paste0('plots/amp-diff.pdf'), w=6, h=23)
-write.table(ampdiff, 'cosopt-processed.amp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
+write.table(ampdiff, 'cosopt-processed/cosopt-processed.amp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 west.high <- union(exp.w, amp.w)
 east.high <- union(exp.e, amp.e)
@@ -542,8 +549,8 @@ ggsave('plots/amp-exp-diff.east-high.pdf', w=6, h=21)
 
 plot.ampdiff.summary()
 # ggsave("plots/amp-exp-diff-summary.png", w=5, h=7)
-write.table(subset(cosopt, GeneID %in% west.high), 'cosopt-processed.amp-exp-diff.west-high.txt', sep = "\t", quote = FALSE, col.names=NA)
-write.table(subset(cosopt, GeneID %in% east.high), 'cosopt-processed.amp-exp-diff.east-high.txt', sep = "\t", quote = FALSE, col.names=NA)
+write.table(subset(cosopt, GeneID %in% west.high), 'cosopt-processed/cosopt-processed.amp-exp-diff.west-high.txt', sep = "\t", quote = FALSE, col.names=NA)
+write.table(subset(cosopt, GeneID %in% east.high), 'cosopt-processed/cosopt-processed.amp-exp-diff.east-high.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 # Polar
 east.high.phase <- subset(cosopt, GeneID %in% east.high)$PeakPhase.E
@@ -585,8 +592,8 @@ west.rhythmic <- rownames(asym.rhythm(s='west', p1=0.001, p2=0.1, amp.min=amp.mi
 east.phase <- subset(cosopt, GeneID %in% east.rhythmic)$PeakPhase.E
 west.phase <- subset(cosopt, GeneID %in% west.rhythmic)$PeakPhase.W
 
-write.table(subset(cosopt, GeneID %in% east.rhythmic), 'cosopt-processed.asymmetric-rhythms.east.txt', sep = "\t", quote = FALSE, col.names=NA)
-write.table(subset(cosopt, GeneID %in% west.rhythmic), 'cosopt-processed.asymmetric-rhythms.west.txt', sep = "\t", quote = FALSE, col.names=NA)
+write.table(subset(cosopt, GeneID %in% east.rhythmic), 'cosopt-processed/cosopt-processed.asymmetric-rhythms.east.txt', sep = "\t", quote = FALSE, col.names=NA)
+write.table(subset(cosopt, GeneID %in% west.rhythmic), 'cosopt-processed/cosopt-processed.asymmetric-rhythms.west.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 
 radius <- rep(1, length(east.phase) + length(west.phase))
