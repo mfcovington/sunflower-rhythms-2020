@@ -97,6 +97,11 @@ if (!file.exists('counts/east-counts.tsv')
 }
 
 if(!exists("timecourse")) timecourse <- readRDS('r-data/timecourse.rds')
+
+timecourse.summary.mean <- dcast(timecourse, gene ~ side + hour, value.var = "mean")
+timecourse.summary.stderr <- dcast(timecourse, gene ~ side + hour, value.var = "stderr")
+timecourse.summary <- merge(timecourse.summary.mean, timecourse.summary.stderr, by = 'gene', all = TRUE, suffixes = c('h_mean', 'h_stderr'))
+names(timecourse.summary)[names(timecourse.summary) == 'gene'] <- 'GeneID'
 ```
 
 ## Function to plot timecourse data and demo
@@ -693,3 +698,51 @@ ggplot(cosopt.both) +
 ggsave('plots/phases.west-vs-east.highlight-shifted.with-SAUR14.png', w=6, h=6)
 ggsave('plots/phases.west-vs-east.highlight-shifted.with-SAUR14.pdf', w=6, h=6)
 ```
+
+
+Create Summary Table with Time Course Data, COSOPT results, etc.
+
+```{r}
+# Merge time course data with COSOPT results
+timecourse.cosopt.summary <- merge(timecourse.summary, cosopt, by = 'GeneID', all = TRUE)
+
+# Mark rhythmic genes
+timecourse.cosopt.summary$RhythmicEast[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+timecourse.cosopt.summary$RhythmicWest[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+timecourse.cosopt.summary$RhythmicBoth[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+timecourse.cosopt.summary$RhythmicMerged[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+
+timecourse.cosopt.summary$RhythmicEast[timecourse.cosopt.summary$GeneID %in% rhythmic.east] <- 1
+timecourse.cosopt.summary$RhythmicWest[timecourse.cosopt.summary$GeneID %in% rhythmic.west] <- 1
+timecourse.cosopt.summary$RhythmicBoth[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 1
+timecourse.cosopt.summary$RhythmicMerged[timecourse.cosopt.summary$GeneID %in% rhythmic.merged] <- 1
+
+
+# Mark genes with higher amplitude or expression on one side
+timecourse.cosopt.summary$AmpHigherEast[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
+timecourse.cosopt.summary$AmpHigherWest[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
+timecourse.cosopt.summary$AmpHigherEast[timecourse.cosopt.summary$GeneID %in% amp.e] <- 1
+timecourse.cosopt.summary$AmpHigherWest[timecourse.cosopt.summary$GeneID %in% amp.w] <- 1
+
+timecourse.cosopt.summary$ExpHigherEast[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
+timecourse.cosopt.summary$ExpHigherWest[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
+timecourse.cosopt.summary$ExpHigherEast[timecourse.cosopt.summary$GeneID %in% exp.e] <- 1
+timecourse.cosopt.summary$ExpHigherWest[timecourse.cosopt.summary$GeneID %in% exp.w] <- 1
+
+timecourse.cosopt.summary$AmpExpHigherEast[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
+timecourse.cosopt.summary$AmpExpHigherWest[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
+timecourse.cosopt.summary$AmpExpHigherEast[timecourse.cosopt.summary$GeneID %in% amp.e | timecourse.cosopt.summary$GeneID %in% exp.e] <- 1
+timecourse.cosopt.summary$AmpExpHigherWest[timecourse.cosopt.summary$GeneID %in% amp.w | timecourse.cosopt.summary$GeneID %in% exp.w] <- 1
+
+
+# Mark asymmetric cyclers (rhythmic on one side, but not the other)
+timecourse.cosopt.summary$AsymmetricEast[timecourse.cosopt.summary$GeneID %in% union(rhythmic.east, rhythmic.west)] <- 0
+timecourse.cosopt.summary$AsymmetricWest[timecourse.cosopt.summary$GeneID %in% union(rhythmic.east, rhythmic.west)] <- 0
+timecourse.cosopt.summary$AsymmetricEast[timecourse.cosopt.summary$GeneID %in% east.rhythmic] <- 1
+timecourse.cosopt.summary$AsymmetricWest[timecourse.cosopt.summary$GeneID %in% west.rhythmic] <- 1
+
+head(timecourse.cosopt.summary, n=5)
+
+write.table(timecourse.cosopt.summary, "Expression-and-COSOPT-Summary.txt", sep = "\t", quote = FALSE, col.names=NA)
+```
+
