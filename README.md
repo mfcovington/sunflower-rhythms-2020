@@ -1,4 +1,4 @@
-# Required input files and documentation for this reproducing this analysis
+# Required input files and documentation for reproducing this analysis
 
 Required input files and documentation for running COSOPT Analysis:
 
