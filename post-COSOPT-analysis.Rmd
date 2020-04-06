@@ -440,12 +440,13 @@ p <- ggplot() +
   geom_histogram(data=histogram.data.combined, aes(x=PeakPhase, color=side, fill=side, y=..count..), alpha=0.2, position='identity', bins=121) +
   geom_ribbon(data=temperature.stats.scaled, aes(x=Time, ymin=min, ymax=max), fill='red', alpha=0.2) +
   geom_line(data=temperature.stats.scaled, aes(x=Time, y=mean), color='red') +
-  labs(x = 'Peak Phase (hours)', y = 'Density') +
+  labs(x = 'Peak Phase (hours)', y = '# of Rhythmic Genes') +
   scale_color_manual(name = 'Side',values = c(east.color, west.color)) +
   scale_fill_manual(name = 'Side',values = c(east.color, west.color)) +
   scale_x_continuous(breaks=seq(0, 24, 6)) +
   coord_cartesian(xlim=c(0, 24), ylim=c(0, 2500), expand=F) +
-  theme_bw()
+  theme_bw() +
+  theme(legend.position = c(.13, .85), legend.background = element_rect(linetype = 'solid',colour = 'gray'))
 p
 ggsave('plots/phase-histogram.temperature.png', w=6, h=5)
 ggsave('plots/phase-histogram.temperature.pdf', w=6, h=5)
