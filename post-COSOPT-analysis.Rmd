@@ -371,7 +371,7 @@ grid.newpage()
 grid.draw(venn.rhythms)
 dev.off()
 
-pdf('plots/venn-rhythmic.pdf', w=7, h=7)
+pdf('plots/venn-rhythmic.pdf', w=7, h=7, useDingbats = FALSE)
 grid.draw(venn.rhythms)
 dev.off()
 
@@ -393,7 +393,7 @@ ggplot(cosopt.both) +
   ylab('Phase (West Side)') +
   theme_bw()
 ggsave('plots/phases.west-vs-east.png', w=6, h=6)
-ggsave('plots/phases.west-vs-east.pdf', w=6, h=6)
+ggsave('plots/phases.west-vs-east.pdf', w=6, h=6, useDingbats = FALSE)
 ```
 
 
@@ -449,7 +449,7 @@ p <- ggplot() +
   theme(legend.position = c(.13, .85), legend.background = element_rect(linetype = 'solid',colour = 'gray'))
 p
 ggsave('plots/phase-histogram.temperature.png', w=6, h=5)
-ggsave('plots/phase-histogram.temperature.pdf', w=6, h=5)
+ggsave('plots/phase-histogram.temperature.pdf', w=6, h=5, useDingbats = FALSE)
 
 
 scale_m <- (max(temperatures$TempC) - min(temperatures$TempC)) / (1500 - p$coordinates$limits$y[1])
@@ -458,7 +458,7 @@ scale_temp_max <- p$coordinates$limits$y[2] * scale_m + scale_b
 scale_temp_min <- min(temperatures$TempC)
 p + scale_y_continuous(sec.axis = sec_axis(~.*scale_m + scale_b, name = "Temperature (ºC)", breaks=seq(scale_temp_min, scale_temp_max, by=5)))
 ggsave('plots/phase-histogram.temperature-axis.png', w=6, h=5)
-ggsave('plots/phase-histogram.temperature-axis.pdf', w=6, h=5)
+ggsave('plots/phase-histogram.temperature-axis.pdf', w=6, h=5, useDingbats = FALSE)
 
 
 p + scale_y_continuous(sec.axis = sec_axis(~.*scale_m + scale_b, name = "Temperature (ºC)", breaks=seq(scale_temp_min, scale_temp_max, by=5))) +
@@ -468,7 +468,7 @@ p + scale_y_continuous(sec.axis = sec_axis(~.*scale_m + scale_b, name = "Tempera
     axis.ticks.y.right = element_line(color = "red"),
   )
 ggsave('plots/phase-histogram.temperature-axis-red.png', w=6, h=5)
-ggsave('plots/phase-histogram.temperature-axis-red.pdf', w=6, h=5)
+ggsave('plots/phase-histogram.temperature-axis-red.pdf', w=6, h=5, useDingbats = FALSE)
 
 
 p + scale_y_continuous(sec.axis = sec_axis(~.*scale_m + scale_b, name = "Temperature (ºC)", breaks=seq(scale_temp_min, scale_temp_max, by=5))) +
@@ -478,7 +478,7 @@ p + scale_y_continuous(sec.axis = sec_axis(~.*scale_m + scale_b, name = "Tempera
     axis.ticks.y.right = element_line(color = alpha("red", 0.6)),
   )
 ggsave('plots/phase-histogram.temperature-axis-lightred.png', w=6, h=5)
-ggsave('plots/phase-histogram.temperature-axis-lightred.pdf', w=6, h=5)
+ggsave('plots/phase-histogram.temperature-axis-lightred.pdf', w=6, h=5, useDingbats = FALSE)
 ```
 
 
@@ -548,10 +548,10 @@ east.high <- union(exp.e, amp.e)
 
 plot.timecourse(west.high, lights.off = 13.25)
 ggsave('plots/amp-exp-diff.west-high.png', w=6, h=30)
-ggsave('plots/amp-exp-diff.west-high.pdf', w=6, h=30)
+ggsave('plots/amp-exp-diff.west-high.pdf', w=6, h=30, useDingbats = FALSE)
 plot.timecourse(east.high, lights.off = 13.25)
 ggsave('plots/amp-exp-diff.east-high.png', w=6, h=21)
-ggsave('plots/amp-exp-diff.east-high.pdf', w=6, h=21)
+ggsave('plots/amp-exp-diff.east-high.pdf', w=6, h=21, useDingbats = FALSE)
 
 plot.ampdiff.summary()
 # ggsave("plots/amp-exp-diff-summary.png", w=5, h=7)
@@ -572,7 +572,7 @@ png('plots/amp-exp-diff.png', w=7, h=7, u='in', res=150)
 polar.plot(radius + noise - max(noise), phases, pch=21, grp=groups, col=c(east.color, west.color), hours=T, avg=T, reverse=F, bg=c(alpha(east.color, 0.2), alpha(west.color, 0.2)), night.start = 13.25, legend.title = 'High Side')
 dev.off()
 
-pdf('plots/amp-exp-diff.pdf', w=7, h=7)
+pdf('plots/amp-exp-diff.pdf', w=7, h=7, useDingbats = FALSE)
 polar.plot(radius + noise - max(noise), phases, pch=21, grp=groups, col=c(east.color, west.color), hours=T, avg=T, reverse=F, bg=c(alpha(east.color, 0.2), alpha(west.color, 0.2)), night.start = 13.25, legend.title = 'High Side')
 dev.off()
 ```
@@ -613,7 +613,7 @@ polar.plot(radius + noise - max(noise), phases, pch=21, grp=groups, col=c(east.c
 dev.off()
 
 
-pdf('plots/asymmetric-rhythms.pdf', w=7, h=7)
+pdf('plots/asymmetric-rhythms.pdf', w=7, h=7, useDingbats = FALSE)
 polar.plot(radius + noise - max(noise), phases, pch=21, grp=groups, col=c(east.color, west.color), hours=T, avg=T, reverse=F, bg=c(alpha(east.color, 0.2), alpha(west.color, 0.2)), night.start = 13.25, legend.title = 'Rhythmic Side')
 dev.off()
 ```
@@ -628,15 +628,15 @@ shoot.movement.pc1 <- c('HanXRQChr08g0210081', 'HanXRQChr03g0091141', 'HanXRQChr
 
 plot.timecourse(onset.time, lights.off=13.25)
 ggsave('plots/gwas.onset-time.png', w=4, h=6)
-ggsave('plots/gwas.onset-time.pdf', w=4, h=6)
+ggsave('plots/gwas.onset-time.pdf', w=4, h=6, useDingbats = FALSE)
 
 plot.timecourse(nocturnal.reorientation, lights.off=13.25)
 ggsave('plots/gwas.nocturnal-reorientation.png', w=4, h=6)
-ggsave('plots/gwas.nocturnal-reorientation.pdf', w=4, h=6)
+ggsave('plots/gwas.nocturnal-reorientation.pdf', w=4, h=6, useDingbats = FALSE)
 
 plot.timecourse(shoot.movement.pc1, lights.off=13.25)
 ggsave('plots/gwas.shoot-movement-pc1.png', w=4, h=4.7)
-ggsave('plots/gwas.shoot-movement-pc1.pdf', w=4, h=4.7)
+ggsave('plots/gwas.shoot-movement-pc1.pdf', w=4, h=4.7, useDingbats = FALSE)
 ```
 
 ```{r}
@@ -652,19 +652,19 @@ phase.shifted.genes <- c('HanXRQChr01g0021731', 'HanXRQChr02g0056351', 'HanXRQCh
 
 plot.timecourse(phase.shifted.genes, lights.off = 13.25)
 ggsave('plots/phase-shifted.png', w=4, h=4.7)
-ggsave('plots/phase-shifted.pdf', w=4, h=4.7)
+ggsave('plots/phase-shifted.pdf', w=4, h=4.7, useDingbats = FALSE)
 
 plot.timecourse(phase.shifted.genes, lights.off = 13.25, double.plot = TRUE)
 ggsave('plots/phase-shifted.double-plotted.png', w=6.5, h=4.7)
-ggsave('plots/phase-shifted.double-plotted.pdf', w=6.5, h=4.7)
+ggsave('plots/phase-shifted.double-plotted.pdf', w=6.5, h=4.7, useDingbats = FALSE)
 
 plot.timecourse(c(phase.shifted.genes, 'HanXRQChr13g0402621'), lights.off = 13.25)
 ggsave('plots/phase-shifted.with-SAUR14.png', w=4, h=6)
-ggsave('plots/phase-shifted.with-SAUR14.pdf', w=4, h=6)
+ggsave('plots/phase-shifted.with-SAUR14.pdf', w=4, h=6, useDingbats = FALSE)
 
 plot.timecourse(c(phase.shifted.genes, 'HanXRQChr13g0402621'), lights.off = 13.25, double.plot = TRUE)
 ggsave('plots/phase-shifted.double-plotted.with-SAUR14.png', w=6.5, h=6)
-ggsave('plots/phase-shifted.double-plotted.with-SAUR14.pdf', w=6.5, h=6)
+ggsave('plots/phase-shifted.double-plotted.with-SAUR14.pdf', w=6.5, h=6, useDingbats = FALSE)
 ```
 
 
@@ -683,7 +683,7 @@ ggplot(cosopt.both) +
   theme_bw()
 
 ggsave('plots/phases.west-vs-east.highlight-shifted.png', w=6, h=6)
-ggsave('plots/phases.west-vs-east.highlight-shifted.pdf', w=6, h=6)
+ggsave('plots/phases.west-vs-east.highlight-shifted.pdf', w=6, h=6, useDingbats = FALSE)
 
 cosopt.both.phaseshifted <- subset(cosopt.both, GeneID %in% phase.shifted.genes)
 ggplot(cosopt.both) +
@@ -697,7 +697,7 @@ ggplot(cosopt.both) +
   theme_bw()
 
 ggsave('plots/phases.west-vs-east.highlight-shifted.with-SAUR14.png', w=6, h=6)
-ggsave('plots/phases.west-vs-east.highlight-shifted.with-SAUR14.pdf', w=6, h=6)
+ggsave('plots/phases.west-vs-east.highlight-shifted.with-SAUR14.pdf', w=6, h=6, useDingbats = FALSE)
 ```
 
 
