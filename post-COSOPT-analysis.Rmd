@@ -112,7 +112,7 @@ if (!dir.exists('plots')) dir.create('plots')
 plot.timecourse <- function(gene.list, east.color='orange', west.color='forestgreen',
                             double.plot=FALSE, side.by.side=FALSE, backlit=TRUE, theme.bw=TRUE,
                             lights.off=NULL, custom.daynight=NULL, night.alpha=0.7,
-                            print.plot=TRUE, return.plot=FALSE) {
+                            print.plot=TRUE, return.plot=FALSE, ncol=1) {
   library(ggplot2)
   timecourse.subset <- timecourse[timecourse$gene %in% gene.list, ]
   timecourse.subset$gene <- as.character(timecourse.subset$gene)
@@ -167,7 +167,7 @@ plot.timecourse <- function(gene.list, east.color='orange', west.color='forestgr
   if (side.by.side) {
     p <- p + facet_grid(gene ~ side, scales='free_y')
   } else {
-    p <- p + facet_wrap(~ gene, ncol=1, scales='free_y')
+    p <- p + facet_wrap(~ gene, ncol=ncol, scales='free_y')
   }
 
   if (theme.bw) {
@@ -541,6 +541,9 @@ amp.w <- subset(cosopt, GeneID %in% amp & amp.diff > 0)$GeneID
 plot.timecourse(amp, lights.off = 13.25)
 ggsave('plots/amp-diff.png', w=6, h=23)
 ggsave('plots/amp-diff.pdf', w=6, h=23, useDingbats = FALSE)
+plot.timecourse(amp, lights.off = 13.25, ncol = 3)
+ggsave('plots/amp-diff.3col.standard-size.png', h=6.35, w=7.5)
+ggsave('plots/amp-diff.3col.standard-size.pdf', h=6.35, w=7.5, useDingbats = FALSE)
 write.table(ampdiff, 'cosopt-processed/cosopt-processed.amp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 west.high <- union(exp.w, amp.w)
@@ -552,6 +555,15 @@ ggsave('plots/amp-exp-diff.west-high.pdf', w=6, h=30, useDingbats = FALSE)
 plot.timecourse(east.high, lights.off = 13.25)
 ggsave('plots/amp-exp-diff.east-high.png', w=6, h=21)
 ggsave('plots/amp-exp-diff.east-high.pdf', w=6, h=21, useDingbats = FALSE)
+
+plot.timecourse(west.high, lights.off = 13.25, ncol=3)
+ggsave('plots/amp-exp-diff.west-high.3col.png', h=8.75, w=7.5)
+ggsave('plots/amp-exp-diff.west-high.3col.pdf', h=8.75, w=7.5, useDingbats = FALSE)
+plot.timecourse(east.high, lights.off = 13.25, ncol=3)
+ggsave('plots/amp-exp-diff.east-high.3col.png', h=8.75, w=7.5)
+ggsave('plots/amp-exp-diff.east-high.3col.pdf', h=8.75, w=7.5, useDingbats = FALSE)
+ggsave('plots/amp-exp-diff.east-high.3col.standard-size.png', h=6.35, w=7.5)
+ggsave('plots/amp-exp-diff.east-high.3col.standard-size.pdf', h=6.35, w=7.5, useDingbats = FALSE)
 
 plot.ampdiff.summary()
 # ggsave("plots/amp-exp-diff-summary.png", w=5, h=7)
