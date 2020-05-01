@@ -524,8 +524,8 @@ plot.ampdiff.summary <- function() {
 
 expdiff <- subset(cosopt, GeneID %in% rhythmic.both & abs(exp.diff.log2) > 0.6 & (MeanExpLev.W > 0.5 | MeanExpLev.E > 0.5 ))
 plot.timecourse(expdiff$GeneID, lights.off = 13.25)
-ggsave(paste0('plots/exp-diff.png'), w=6, h=25)
-ggsave(paste0('plots/exp-diff.pdf'), w=6, h=25)
+ggsave('plots/exp-diff.png', w=6, h=25)
+ggsave('plots/exp-diff.pdf', w=6, h=25, useDingbats = FALSE)
 write.table(expdiff, 'cosopt-processed/cosopt-processed.exp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 exp <- rownames(expdiff)
@@ -539,8 +539,8 @@ amp.e <- subset(cosopt, GeneID %in% amp & amp.diff < 0)$GeneID
 amp.w <- subset(cosopt, GeneID %in% amp & amp.diff > 0)$GeneID
 
 plot.timecourse(amp, lights.off = 13.25)
-ggsave(paste0('plots/amp-diff.png'), w=6, h=23)
-ggsave(paste0('plots/amp-diff.pdf'), w=6, h=23)
+ggsave('plots/amp-diff.png', w=6, h=23)
+ggsave('plots/amp-diff.pdf', w=6, h=23, useDingbats = FALSE)
 write.table(ampdiff, 'cosopt-processed/cosopt-processed.amp-diff.txt', sep = "\t", quote = FALSE, col.names=NA)
 
 west.high <- union(exp.w, amp.w)
