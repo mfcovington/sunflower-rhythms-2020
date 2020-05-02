@@ -753,6 +753,18 @@ timecourse.cosopt.summary$RhythmicBoth[timecourse.cosopt.summary$GeneID %in% rhy
 timecourse.cosopt.summary$RhythmicMerged[timecourse.cosopt.summary$GeneID %in% rhythmic.merged] <- 1
 
 
+# Mark expressed genes
+timecourse.cosopt.summary$ExpressedEast[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+timecourse.cosopt.summary$ExpressedWest[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+timecourse.cosopt.summary$ExpressedBoth[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+timecourse.cosopt.summary$ExpressedMerged[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
+
+timecourse.cosopt.summary$ExpressedEast[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev.E >= min.meanexplev)$GeneID] <- 1
+timecourse.cosopt.summary$ExpressedWest[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev.W >= min.meanexplev)$GeneID] <- 1
+timecourse.cosopt.summary$ExpressedBoth[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev)$GeneID] <- 1
+timecourse.cosopt.summary$ExpressedMerged[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev >= min.meanexplev)$GeneID] <- 1
+
+
 # Mark genes with higher amplitude or expression on one side
 timecourse.cosopt.summary$AmpHigherEast[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
 timecourse.cosopt.summary$AmpHigherWest[timecourse.cosopt.summary$GeneID %in% rhythmic.both] <- 0
