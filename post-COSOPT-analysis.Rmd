@@ -254,17 +254,21 @@ write.table(cosopt, cosopt.processed.file, sep = "\t", quote = FALSE, col.names=
 
 
 # Expressed Genes
-#Expressed in East or West: 33,188
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev | MeanExpLev.W >= min.meanexplev))
-#Expressed in East and West: 26,928
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev))
-
 #Expressed in East: 30,166
 nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev))
 #Expressed in West: 29,950
 nrow(subset(cosopt, MeanExpLev.W >= min.meanexplev))
 #Expressed in Merged: 30,844
 nrow(subset(cosopt, MeanExpLev >= min.meanexplev))
+
+#Expressed in East or West: 33,188
+nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev | MeanExpLev.W >= min.meanexplev))
+#Expressed in East and West: 26,928
+nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev))
+#Expressed in East, West, and Merged: 26,641
+nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev & MeanExpLev >= min.meanexplev))
+#Expressed in East, West, or Merged: 33,488
+nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev | MeanExpLev.W >= min.meanexplev | MeanExpLev >= min.meanexplev))
 
 
 # Get rhythmic genes
@@ -273,32 +277,35 @@ rhythmic.west <- as.character(cosopt.west$GeneID[cosopt.west$pMMC.Beta < min.p.m
 rhythmic.both <- intersect(rhythmic.east, rhythmic.west)
 rhythmic.merged <- as.character(cosopt.merged$GeneID[cosopt.merged$pMMC.Beta < min.p.mmc.beta & cosopt.merged$MeanExpLev >= min.meanexplev])
 rhythmic.all <- intersect(rhythmic.both, rhythmic.merged)
+rhythmic.any <- union(rhythmic.merged, union(rhythmic.east, rhythmic.west))
 
 length(intersect(rhythmic.merged, rhythmic.east))
-# [1] 21605
+# [1] 21391
 length(intersect(rhythmic.merged, rhythmic.west))
-# [1] 21585
+# [1] 21366
 
 
 rhythmic.east.only <- setdiff(rhythmic.east, rhythmic.both)
 rhythmic.west.only <- setdiff(rhythmic.west, rhythmic.both)
 
 length(rhythmic.east)
-# [1] 22559
+# [1] 22328
 length(rhythmic.west)
-# [1] 22623
+# [1] 22374
 length(rhythmic.merged)
-# [1] 24914
+# [1] 24574
 
 length(rhythmic.both)
-# [1] 19235
+# [1] 19095
 length(rhythmic.all)
-# [1] 19201
+# [1] 19062
+length(rhythmic.any)
+# [1] 26486
 
 length(rhythmic.east.only)
-# [1] 3324
+# [1] 3233
 length(rhythmic.west.only)
-# [1] 3388
+# [1] 3279
 
 
 if (!dir.exists('rhythmic-genes')) dir.create('rhythmic-genes')
@@ -320,15 +327,30 @@ Rhythmic Counts Summary:
         East or West: 33,188
         East and West: 26,928
         Merged: 30,844
+        East, West, or Merged: 33,488
+        East, West, and Merged: 26,641
 
-    Rhythmic Genes in East and West time courses: 25,607
+
+    Rhythmic Genes in East or West time course: 25,607
 
         East only: 3,233 (12.6%)
         West only: 3,279 (12.8%)
         Both East and West: 19,095 (74.6%)
 
     Rhythmic Genes in Merged time course: 24,574
+    Rhythmic Genes in any time courses (East, West, and Merged): 26,486
     Rhythmic Genes in all three time courses (East, West, and Merged): 19,062
+
+
+                              Rhythmic    Expressed    % Rhythmic
+    East                        22,328       30,166         74.0%
+    West                        22,374       29,950         74.7%
+    East or West                25,607       33,188         77.2%
+    East and West               19,095       26,928         70.9%
+    Merged                      24,574       30,844         79.7%
+    East, West, or Merged       26,486       33,488         79.1%
+    East, West, and Merged      19,062       26,641         71.6%
+
 
 
 Venn Diagram of Rhythmic Genes
