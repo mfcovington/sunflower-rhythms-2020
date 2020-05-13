@@ -47,6 +47,7 @@ west.color <- 'forestgreen'
 ```{r}
 if (!file.exists('counts/east-counts.tsv')
     | !file.exists('counts/west-counts.tsv')
+    | !file.exists('counts/merged-counts.tsv')
     | !file.exists('r-data/timecourse.rds')) {
 
   if (!dir.exists('r-data')) dir.create('r-data')
@@ -54,6 +55,20 @@ if (!file.exists('counts/east-counts.tsv')
   counts <- read.table('counts/reanalysis_HA2015_HanXRQr1.0_mRNA_normalized_arranged.csv', sep=',', row.names=1, header=TRUE)
   # Remove bad replicates
   counts <- counts[, ! colnames(counts) %in% c('X4ea2', 'X10ea3', 'X16ea3', 'X10w3', 'X15w2')]
+
+  # Output East and West counts files
+  saveRDS(counts, 'r-data/counts.rds')
+
+  # Extract Zeitgeber Time from column names
+  time.idx <- as.integer(sub("X([0-9]+)[ew][ae]?[1-3]{1}", "\\1", colnames(counts)))
+  times <- seq(0, 46, 2)
+  hour <- times[time.idx]
+  saveRDS(hour, 'r-data/hour.rds')
+
+
+  counts[] <- lapply(counts, as.numeric)
+  counts <- rbind(hour, counts)
+  rownames(counts)[1] <- 'Gene'
 
 
   # Extract sample side from column names
@@ -66,25 +81,6 @@ if (!file.exists('counts/east-counts.tsv')
 
   saveRDS(side, 'r-data/side.rds')
 
-  
-  # Extract Zeitgeber Time from column names
-  time.idx <- as.integer(sub("X([0-9]+)[ew][ae]?[1-3]{1}", "\\1", colnames(counts)))
-  times <- seq(0, 46, 2)
-  hour <- times[time.idx]
-  saveRDS(hour, 'r-data/hour.rds')
-
-  # Prepare timecourse for plotting
-  timecourse <- data.frame(hour, side, t(counts))
-  timecourse <- melt(timecourse, id.vars=c('hour', 'side'), variable.name='gene', value.name='counts', na.rm=TRUE)
-  timecourse <- ddply(timecourse, .(hour, side, gene), summarize, mean=mean(counts), stderr=sqrt(var(counts,na.rm=TRUE)/length(na.omit(counts))), .progress='text')
-  saveRDS(timecourse, 'r-data/timecourse.rds')
-
-  # Output East and West counts files
-  saveRDS(counts, 'r-data/counts.rds')
-
-  counts[] <- lapply(counts, as.character)
-  counts <- rbind(hour, counts)
-  rownames(counts)[1] <- 'Gene'
 
   west.counts <- counts[, west.samples]
   east.counts <- counts[, east.samples]
@@ -92,8 +88,43 @@ if (!file.exists('counts/east-counts.tsv')
   write.table(east.counts, 'counts/east-counts.tsv', sep='\t', quote=F, col.names=F)
   write.table(west.counts, 'counts/west-counts.tsv', sep='\t', quote=F, col.names=F)
 
-  saveRDS(east.counts, 'r-data/east.counts.rds')
-  saveRDS(west.counts, 'r-data/west.counts.rds')
+  saveRDS(east.counts[-1, ], 'r-data/east.counts.rds')
+  saveRDS(west.counts[-1, ], 'r-data/west.counts.rds')
+
+
+  # Get Merged Counts
+  west.counts.temp <- west.counts
+  east.counts.temp <- east.counts
+
+  colnames(west.counts.temp) <- sub('w', 'm', colnames(west.counts.temp))
+  colnames(east.counts.temp) <- sub('ea', 'm', colnames(east.counts.temp))
+
+  gene.ids <- rownames(counts)
+  merged.sample.ids <- intersect(colnames(west.counts.temp), colnames(east.counts.temp))
+  merged.counts = data.frame(matrix(vector(), length(gene.ids),
+    length(merged.sample.ids), dimnames=list(gene.ids, merged.sample.ids)),
+    stringsAsFactors=F)
+
+  for (sample.id in merged.sample.ids) {
+    merged.counts[, colnames(merged.counts) == sample.id] <- rowMeans(cbind(
+      west.counts.temp[, colnames(west.counts.temp) == sample.id],
+      east.counts.temp[, colnames(east.counts.temp) == sample.id]
+    ))
+  }
+
+  write.table(merged.counts, 'counts/merged-counts.tsv', sep='\t', quote=F, col.names=F)
+  saveRDS(merged.counts[-1, ], 'r-data/merged.counts.rds')
+
+
+  # Prepare timecourse for plotting
+  timecourse <- data.frame(hour, side, t(counts))
+  timecourse.sides <- data.frame(hour, side, t(counts[rownames(counts) != "Gene", ]))
+  hour.merged <- as.numeric(merged.counts[rownames(merged.counts) == "Gene", ])
+  timecourse.merged <- data.frame(hour = hour.merged, side = "Merged", t(merged.counts[rownames(merged.counts) != "Gene", ]))
+  timecourse.all <- rbind(timecourse.sides, timecourse.merged)
+  timecourse.all <- melt(timecourse.all, id.vars=c('hour', 'side'), variable.name='gene', value.name='counts', na.rm=TRUE)
+  timecourse <- ddply(timecourse.all, .(hour, side, gene), summarize, mean=mean(counts), stderr=sqrt(var(counts,na.rm=TRUE)/length(na.omit(counts))), .progress='text')
+  saveRDS(timecourse, 'r-data/timecourse.rds')
 }
 
 if(!exists("timecourse")) timecourse <- readRDS('r-data/timecourse.rds')
@@ -110,11 +141,18 @@ names(timecourse.summary)[names(timecourse.summary) == 'gene'] <- 'GeneID'
 if (!dir.exists('plots')) dir.create('plots')
 
 plot.timecourse <- function(gene.list, east.color='orange', west.color='forestgreen',
+                            merged.color='black', plot.merged=FALSE,
                             double.plot=FALSE, side.by.side=FALSE, backlit=TRUE, theme.bw=TRUE,
                             lights.off=NULL, custom.daynight=NULL, night.alpha=0.7,
                             print.plot=TRUE, return.plot=FALSE, ncol=1) {
   library(ggplot2)
   timecourse.subset <- timecourse[timecourse$gene %in% gene.list, ]
+  if (plot.merged) {
+    plot.colors <- c(east.color, west.color, merged.color)
+  } else {
+    plot.colors <- c(east.color, west.color)
+    timecourse.subset <- subset(timecourse.subset, side != "Merged")
+  }
   timecourse.subset$gene <- as.character(timecourse.subset$gene)
 
   if (double.plot) {
@@ -145,9 +183,19 @@ plot.timecourse <- function(gene.list, east.color='orange', west.color='forestgr
   if (backlit) {
      p <- p +
        geom_line(data=subset(timecourse.subset, side=='West'), aes(x=hour, y=mean), color='white', size=2) +
-       geom_line(data=subset(timecourse.subset, side=='East'), aes(x=hour, y=mean), color='white', size=2) +
+       geom_line(data=subset(timecourse.subset, side=='East'), aes(x=hour, y=mean), color='white', size=2)
+     
+     if (plot.merged) {
+       p <- p + geom_line(data=subset(timecourse.subset, side=='Merged'), aes(x=hour, y=mean), color='white', size=2)
+     }
+     
+     p <- p +
        geom_errorbar(data=subset(timecourse.subset, side=='West'), aes(x=hour, ymin=mean-stderr, ymax=mean+stderr), color='white') +
        geom_errorbar(data=subset(timecourse.subset, side=='East'), aes(x=hour, ymin=mean-stderr, ymax=mean+stderr), color='white')
+
+     if (plot.merged) {
+       p <- p + geom_errorbar(data=subset(timecourse.subset, side=='Merged'), aes(x=hour, ymin=mean-stderr, ymax=mean+stderr), color='white')
+     }
   }
 
   p <- p +
@@ -156,7 +204,7 @@ plot.timecourse <- function(gene.list, east.color='orange', west.color='forestgr
        geom_errorbar(data=timecourse.subset, aes(x=hour, color=side, ymin=mean-stderr, ymax=mean+stderr), alpha=0.35) +
        labs(x = 'Time (hours)', y = 'Mean Normalized Counts') +
        scale_x_continuous(breaks=x.breaks) +
-       scale_color_manual(name='Side',values=c(east.color, west.color))
+       scale_color_manual(name='Side',values=plot.colors)
 
   if (double.plot) {
     p <- p + coord_cartesian(xlim=c(0, 96), expand=T)
@@ -254,58 +302,70 @@ write.table(cosopt, cosopt.processed.file, sep = "\t", quote = FALSE, col.names=
 
 
 # Expressed Genes
-#Expressed in East: 30,166
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev))
-#Expressed in West: 29,950
-nrow(subset(cosopt, MeanExpLev.W >= min.meanexplev))
-#Expressed in Merged: 30,844
-nrow(subset(cosopt, MeanExpLev >= min.meanexplev))
 
-#Expressed in East or West: 33,188
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev | MeanExpLev.W >= min.meanexplev))
-#Expressed in East and West: 26,928
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev))
-#Expressed in East, West, and Merged: 26,641
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev & MeanExpLev >= min.meanexplev))
-#Expressed in East, West, or Merged: 33,488
-nrow(subset(cosopt, MeanExpLev.E >= min.meanexplev | MeanExpLev.W >= min.meanexplev | MeanExpLev >= min.meanexplev))
+mean.expression <- data.frame(
+  east = rowMeans(timecourse.summary.mean[, grepl("East", names(timecourse.summary.mean))]),
+  west = rowMeans(timecourse.summary.mean[, grepl("West", names(timecourse.summary.mean))]),
+  merged = rowMeans(timecourse.summary.mean[, grepl("Merged", names(timecourse.summary.mean))])
+)
+rownames(mean.expression) <- timecourse.summary.mean$gene
+
+expressed <- as.data.frame(mean.expression >= min.meanexplev)
+rownames(expressed) <- rownames(mean.expression)
+
+
+#Expressed in East: 35,205
+sum(expressed$east)
+#Expressed in West: 35,299
+sum(expressed$west)
+#Expressed in Merged: 35,239
+sum(expressed$merged)
+
+#Expressed in East or West: 35,491
+sum(expressed$east | expressed$west)
+#Expressed in East and West: 35,013
+sum(expressed$east & expressed$west)
+#Expressed in East, West, and Merged: 35,005
+sum(expressed$east & expressed$west & expressed$merged)
+#Expressed in East, West, or Merged: 35,492
+sum(expressed$east | expressed$west | expressed$merged)
 
 
 # Get rhythmic genes
-rhythmic.east <- as.character(cosopt.east$GeneID[cosopt.east$pMMC.Beta < min.p.mmc.beta & cosopt.east$MeanExpLev >= min.meanexplev])
-rhythmic.west <- as.character(cosopt.west$GeneID[cosopt.west$pMMC.Beta < min.p.mmc.beta & cosopt.west$MeanExpLev >= min.meanexplev])
+rhythmic.east <- as.character(cosopt.east$GeneID[cosopt.east$pMMC.Beta < min.p.mmc.beta & cosopt.east$GeneID %in% rownames(expressed)[expressed$east]])
+rhythmic.west <- as.character(cosopt.west$GeneID[cosopt.west$pMMC.Beta < min.p.mmc.beta & cosopt.west$GeneID %in% rownames(expressed)[expressed$west]])
 rhythmic.both <- intersect(rhythmic.east, rhythmic.west)
-rhythmic.merged <- as.character(cosopt.merged$GeneID[cosopt.merged$pMMC.Beta < min.p.mmc.beta & cosopt.merged$MeanExpLev >= min.meanexplev])
+rhythmic.merged <- as.character(cosopt.merged$GeneID[cosopt.merged$pMMC.Beta < min.p.mmc.beta & cosopt.merged$GeneID %in% rownames(expressed)[expressed$merged]])
 rhythmic.all <- intersect(rhythmic.both, rhythmic.merged)
 rhythmic.any <- union(rhythmic.merged, union(rhythmic.east, rhythmic.west))
 
 length(intersect(rhythmic.merged, rhythmic.east))
-# [1] 21391
+# [1] 21393
 length(intersect(rhythmic.merged, rhythmic.west))
-# [1] 21366
+# [1] 21365
 
 
 rhythmic.east.only <- setdiff(rhythmic.east, rhythmic.both)
 rhythmic.west.only <- setdiff(rhythmic.west, rhythmic.both)
 
 length(rhythmic.east)
-# [1] 22328
+# [1] 22333
 length(rhythmic.west)
-# [1] 22374
+# [1] 22383
 length(rhythmic.merged)
-# [1] 24574
+# [1] 24568
 
 length(rhythmic.both)
-# [1] 19095
+# [1] 19100
 length(rhythmic.all)
-# [1] 19062
+# [1] 19064
 length(rhythmic.any)
-# [1] 26486
+# [1] 26490
 
 length(rhythmic.east.only)
 # [1] 3233
 length(rhythmic.west.only)
-# [1] 3279
+# [1] 3283
 
 
 if (!dir.exists('rhythmic-genes')) dir.create('rhythmic-genes')
@@ -322,34 +382,34 @@ Rhythmic Counts Summary:
     Total # of Genes with at least one set of COSOPT results: 44,477
     Total # of Expressed Genes:
 
-        East: 30,166
-        West: 29,950
-        East or West: 33,188
-        East and West: 26,928
-        Merged: 30,844
-        East, West, or Merged: 33,488
-        East, West, and Merged: 26,641
+        East: 35,205
+        West: 35,299
+        East or West: 35,491
+        East and West: 35,013
+        Merged: 35,239
+        East, West, or Merged: 35,492
+        East, West, and Merged: 35,005
 
 
-    Rhythmic Genes in East or West time course: 25,607
+    Rhythmic Genes in East or West time course: 25,661
 
         East only: 3,233 (12.6%)
-        West only: 3,279 (12.8%)
-        Both East and West: 19,095 (74.6%)
+        West only: 3,283 (12.8%)
+        Both East and West: 19,100 (74.4%)
 
-    Rhythmic Genes in Merged time course: 24,574
-    Rhythmic Genes in any time courses (East, West, and Merged): 26,486
-    Rhythmic Genes in all three time courses (East, West, and Merged): 19,062
+    Rhythmic Genes in Merged time course: 24,568
+    Rhythmic Genes in any time course (East, West, and Merged): 26,490
+    Rhythmic Genes in all three time courses (East, West, and Merged): 19,064
 
 
                               Rhythmic    Expressed    % Rhythmic
-    East                        22,328       30,166         74.0%
-    West                        22,374       29,950         74.7%
-    East or West                25,607       33,188         77.2%
-    East and West               19,095       26,928         70.9%
-    Merged                      24,574       30,844         79.7%
-    East, West, or Merged       26,486       33,488         79.1%
-    East, West, and Merged      19,062       26,641         71.6%
+    East                        22,333       35,205         63.4%
+    West                        22,383       35,299         63.4%
+    East or West                25,661       35,491         72.3%
+    East and West               19,100       35,013         54.6%
+    Merged                      24,568       35,239         69.7%
+    East, West, or Merged       26,490       35,492         74.6%
+    East, West, and Merged      19,064       35,005         54.5%
 
 
 
@@ -515,8 +575,9 @@ md5sum(cosopt.processed.file)
 
 ```{r}
 plot.ampdiff.summary <- function() {
-  timecourse.w <- subset(timecourse, gene %in% west.high)
-  timecourse.e <- subset(timecourse, gene %in% east.high)
+  timecourse.subset <- subset(timecourse, side != "Merged")
+  timecourse.w <- subset(timecourse.subset, gene %in% west.high)
+  timecourse.e <- subset(timecourse.subset, gene %in% east.high)
 
   timecourse.w <- merge(timecourse.w, cosopt[, c('GeneID', 'MeanExpLev')], by.x='gene', by.y='GeneID')
   timecourse.e <- merge(timecourse.e, cosopt[, c('GeneID', 'MeanExpLev')], by.x='gene', by.y='GeneID')
@@ -741,6 +802,12 @@ Create Summary Table with Time Course Data, COSOPT results, etc.
 # Merge time course data with COSOPT results
 timecourse.cosopt.summary <- merge(timecourse.summary, cosopt, by = 'GeneID', all = TRUE)
 
+# Record mean expression levels
+timecourse.cosopt.summary$MeanExpressionEast <- mean.expression$east
+timecourse.cosopt.summary$MeanExpressionWest <- mean.expression$west
+timecourse.cosopt.summary$MeanExpressionMerged <- mean.expression$merged
+
+
 # Mark rhythmic genes
 timecourse.cosopt.summary$RhythmicEast[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
 timecourse.cosopt.summary$RhythmicWest[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
@@ -759,10 +826,10 @@ timecourse.cosopt.summary$ExpressedWest[timecourse.cosopt.summary$GeneID %in% co
 timecourse.cosopt.summary$ExpressedBoth[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
 timecourse.cosopt.summary$ExpressedMerged[timecourse.cosopt.summary$GeneID %in% cosopt$GeneID] <- 0
 
-timecourse.cosopt.summary$ExpressedEast[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev.E >= min.meanexplev)$GeneID] <- 1
-timecourse.cosopt.summary$ExpressedWest[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev.W >= min.meanexplev)$GeneID] <- 1
-timecourse.cosopt.summary$ExpressedBoth[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev.E >= min.meanexplev & MeanExpLev.W >= min.meanexplev)$GeneID] <- 1
-timecourse.cosopt.summary$ExpressedMerged[timecourse.cosopt.summary$GeneID %in% subset(cosopt, MeanExpLev >= min.meanexplev)$GeneID] <- 1
+timecourse.cosopt.summary$ExpressedEast[timecourse.cosopt.summary$GeneID %in% rownames(expressed)[expressed$east]] <- 1
+timecourse.cosopt.summary$ExpressedWest[timecourse.cosopt.summary$GeneID %in% rownames(expressed)[expressed$west]] <- 1
+timecourse.cosopt.summary$ExpressedBoth[timecourse.cosopt.summary$GeneID %in% rownames(expressed)[expressed$east & expressed$west]] <- 1
+timecourse.cosopt.summary$ExpressedMerged[timecourse.cosopt.summary$GeneID %in% rownames(expressed)[expressed$merged]] <- 1
 
 
 # Mark genes with higher amplitude or expression on one side
