@@ -144,9 +144,9 @@ plot.timecourse <- function(gene.list, east.color='orange', west.color='forestgr
                             merged.color='black', plot.merged=FALSE,
                             double.plot=FALSE, side.by.side=FALSE, backlit=TRUE, theme.bw=TRUE,
                             lights.off=NULL, custom.daynight=NULL, night.alpha=0.7,
-                            print.plot=TRUE, return.plot=FALSE, ncol=1) {
+                            print.plot=TRUE, return.plot=FALSE, ncol=1, .timecourse=timecourse) {
   library(ggplot2)
-  timecourse.subset <- timecourse[timecourse$gene %in% gene.list, ]
+  timecourse.subset <- .timecourse[.timecourse$gene %in% gene.list, ]
   if (plot.merged) {
     plot.colors <- c(east.color, west.color, merged.color)
   } else {
