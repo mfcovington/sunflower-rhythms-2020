@@ -303,16 +303,39 @@ write.table(cosopt, cosopt.processed.file, sep = "\t", quote = FALSE, col.names=
 
 # Expressed Genes
 
-mean.expression <- data.frame(
-  east = rowMeans(timecourse.summary.mean[, grepl("East", names(timecourse.summary.mean))]),
-  west = rowMeans(timecourse.summary.mean[, grepl("West", names(timecourse.summary.mean))]),
-  merged = rowMeans(timecourse.summary.mean[, grepl("Merged", names(timecourse.summary.mean))])
-)
-rownames(mean.expression) <- timecourse.summary.mean$gene
+get.expressed.genes <- function(min.meanexplev = NULL, min.expressed.count = NULL) {
+  if(is.null(min.meanexplev)) stop("No minimum expression level given.")
+  
+  mean.expression <- data.frame(
+    east = rowMeans(timecourse.summary.mean[, grepl("East", names(timecourse.summary.mean))]),
+    west = rowMeans(timecourse.summary.mean[, grepl("West", names(timecourse.summary.mean))]),
+    merged = rowMeans(timecourse.summary.mean[, grepl("Merged", names(timecourse.summary.mean))])
+  )
+  rownames(mean.expression) <- timecourse.summary.mean$gene
+  
+  if(is.null(min.expressed.count)) {
+    expressed.genes <- as.data.frame(mean.expression >= min.meanexplev)
+    rownames(expressed.genes) <- rownames(mean.expression)
+  } else {
+    expressed.frequency <- data.frame(
+      east = rowSums(timecourse.summary.mean[, grepl("East", names(timecourse.summary.mean))] > min.meanexplev),
+      west = rowSums(timecourse.summary.mean[, grepl("West", names(timecourse.summary.mean))] > min.meanexplev),
+      merged = rowSums(timecourse.summary.mean[, grepl("Merged", names(timecourse.summary.mean))] > min.meanexplev)
+    )
+    rownames(expressed.frequency) <- timecourse.summary.mean$gene
+    expressed.genes <- as.data.frame(expressed.frequency >= min.expressed.count)
+    rownames(expressed.genes) <- rownames(expressed.frequency)
+  }
+  
+  out <- list()
+  out$mean.expression <- mean.expression
+  out$expressed.genes <- expressed.genes
+  return(out)
+}
 
-expressed <- as.data.frame(mean.expression >= min.meanexplev)
-rownames(expressed) <- rownames(mean.expression)
-
+expressed.genes <- get.expressed.genes(min.meanexplev = min.meanexplev)
+expressed <- expressed.genes$expressed
+mean.expression <- expressed.genes$mean.expression
 
 #Expressed in East: 35,205
 sum(expressed$east)
