@@ -32,7 +32,8 @@ knitr::opts_knit$set(root.dir='.')
 
 ```{r}
 min.p.mmc.beta <- 0.05
-min.meanexplev <- 0.2
+min.meanexplev <- 0.05
+min.expressed.count <- 8
 per.buffer <- 2
 exp.min <- 10
 amp.min <- 0.2
@@ -333,24 +334,25 @@ get.expressed.genes <- function(min.meanexplev = NULL, min.expressed.count = NUL
   return(out)
 }
 
-expressed.genes <- get.expressed.genes(min.meanexplev = min.meanexplev)
+expressed.genes <- get.expressed.genes(
+  min.meanexplev = min.meanexplev, min.expressed.count = min.expressed.count)
 expressed <- expressed.genes$expressed
 mean.expression <- expressed.genes$mean.expression
 
-#Expressed in East: 35,205
+#Expressed in East: 40,291
 sum(expressed$east)
-#Expressed in West: 35,299
+#Expressed in West: 40,354
 sum(expressed$west)
-#Expressed in Merged: 35,239
+#Expressed in Merged: 40,228
 sum(expressed$merged)
 
-#Expressed in East or West: 35,491
+#Expressed in East or West: 40,739
 sum(expressed$east | expressed$west)
-#Expressed in East and West: 35,013
+#Expressed in East and West: 39,906
 sum(expressed$east & expressed$west)
-#Expressed in East, West, and Merged: 35,005
+#Expressed in East, West, and Merged: 39,832
 sum(expressed$east & expressed$west & expressed$merged)
-#Expressed in East, West, or Merged: 35,492
+#Expressed in East, West, or Merged: 40,781
 sum(expressed$east | expressed$west | expressed$merged)
 
 
@@ -363,32 +365,32 @@ rhythmic.all <- intersect(rhythmic.both, rhythmic.merged)
 rhythmic.any <- union(rhythmic.merged, union(rhythmic.east, rhythmic.west))
 
 length(intersect(rhythmic.merged, rhythmic.east))
-# [1] 21393
+# [1] 22005
 length(intersect(rhythmic.merged, rhythmic.west))
-# [1] 21365
+# [1] 22014
 
 
 rhythmic.east.only <- setdiff(rhythmic.east, rhythmic.both)
 rhythmic.west.only <- setdiff(rhythmic.west, rhythmic.both)
 
 length(rhythmic.east)
-# [1] 22333
+# [1] 23083
 length(rhythmic.west)
-# [1] 22383
+# [1] 23172
 length(rhythmic.merged)
-# [1] 24568
+# [1] 25778
 
 length(rhythmic.both)
-# [1] 19100
+# [1] 19447
 length(rhythmic.all)
-# [1] 19064
+# [1] 19409
 length(rhythmic.any)
-# [1] 26490
+# [1] 27976
 
 length(rhythmic.east.only)
-# [1] 3233
+# [1] 3636
 length(rhythmic.west.only)
-# [1] 3283
+# [1] 3725
 
 
 if (!dir.exists('rhythmic-genes')) dir.create('rhythmic-genes')
@@ -402,37 +404,36 @@ Rhythmic Counts Summary:
 
 
     Total # of Genes: 49,262
-    Total # of Genes with at least one set of COSOPT results: 44,477
     Total # of Expressed Genes:
 
-        East: 35,205
-        West: 35,299
-        East or West: 35,491
-        East and West: 35,013
-        Merged: 35,239
-        East, West, or Merged: 35,492
-        East, West, and Merged: 35,005
+        East: 40,291
+        West: 40,354
+        East or West: 40,739
+        East and West: 39,906
+        Merged: 40,228
+        East, West, or Merged: 39,832
+        East, West, and Merged: 40,781
 
 
-    Rhythmic Genes in East or West time course: 25,661
+    Rhythmic Genes in East or West time course: 26,808
 
-        East only: 3,233 (12.6%)
-        West only: 3,283 (12.8%)
-        Both East and West: 19,100 (74.4%)
+        East only: 3,636 (13.6%)
+        West only: 3,725 (13.9%)
+        Both East and West: 19,447 (72.5%)
 
-    Rhythmic Genes in Merged time course: 24,568
-    Rhythmic Genes in any time course (East, West, and Merged): 26,490
-    Rhythmic Genes in all three time courses (East, West, and Merged): 19,064
+    Rhythmic Genes in Merged time course: 25,778
+    Rhythmic Genes in any time course (East, West, and Merged): 27,976
+    Rhythmic Genes in all three time courses (East, West, and Merged): 19,409
 
 
                               Rhythmic    Expressed    % Rhythmic
-    East                        22,333       35,205         63.4%
-    West                        22,383       35,299         63.4%
-    East or West                25,661       35,491         72.3%
-    East and West               19,100       35,013         54.6%
-    Merged                      24,568       35,239         69.7%
-    East, West, or Merged       26,490       35,492         74.6%
-    East, West, and Merged      19,064       35,005         54.5%
+    East                        23,083       40,291         57.3%
+    West                        23,172       40,354         57.4%
+    East or West                26,808       40,739         65.8%
+    East and West               19,447       39,906         48.7%
+    Merged                      25,778       40,228         64.1%
+    East, West, or Merged       27,976       39,832         70.2%
+    East, West, and Merged      19,409       40,781         47.6%
 
 
 
