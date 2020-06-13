@@ -884,3 +884,9 @@ head(timecourse.cosopt.summary, n=5)
 write.table(timecourse.cosopt.summary, "Expression-and-COSOPT-Summary.txt", sep = "\t", quote = FALSE, col.names=NA)
 ```
 
+
+```{r}
+session.info <- devtools::session_info()
+session.info
+writeLines(capture.output(session.info), "r-session-info.txt")
+```
